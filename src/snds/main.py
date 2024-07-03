@@ -14,29 +14,52 @@ class Base():
     Agency: str
     URN: str
 
+
 @dataclasses.dataclass
-class VariableRepresentation:
+class VariableRepresentation(Base):
     Representation: object
 
 
 @dataclasses.dataclass
-class NumericRepresentation:
-    pass
+class NumericRepresentation(Base):
+    NumberRange: int
+
+    def to_ld(self):
+        return {"ddi:NumberRange": self.NumberRange, "ddi:URN": self.URN}
 
 
 @dataclasses.dataclass
-class TextRepresentation:
-    pass
+class TextRepresentation(Base):
+    MaxLength: int
+
+    def to_ld(self):
+        return {"ddi:MaxLength": self.MaxLength, "ddi:URN": self.URN}
 
 
 @dataclasses.dataclass
-class CodeRepresentation:
+class CodeRepresentation(Base):
     CodeListReference: str
 
+    def to_ld(self):
+        return {"ddi:CodeListReference": self.CodeListReference, "ddi:URN": self.URN}
+
 
 @dataclasses.dataclass
-class TodoRepresentation:
-    pass
+class DateTimeRepresentation(Base):
+    DateFieldFormat: str
+    Range: int
+
+    def to_ld(self):
+        return {"ddi:DateFieldFormat": self.DateFieldFormat, "ddi:Range": self.Range, "ddi:URN": self.URN}
+
+
+@dataclasses.dataclass
+class AccessRestrictionDate(Base):
+    StartDate: int
+    EndDate: int
+
+    def to_ld(self):
+        return {"ddi:StartDate": self.StartDate, "ddi:EndDate": self.EndDate, "ddi:URN": self.URN}
 
 
 @dataclasses.dataclass
@@ -44,6 +67,7 @@ class Variable(Base):
     VariableName: str
     Description: str
     VariableRepresentation: VariableRepresentation
+    ValidityDates: AccessRestrictionDate
 
     def to_ld(self):
         return {"ddi:VariableName": self.VariableName, "ddi:URN": self.URN}
@@ -51,25 +75,35 @@ class Variable(Base):
 # ---- Fns
 
 
-def infer_representation(type: str):
+def get_representation(var):
+    identifier = uuid.uuid4()
+
+    type = var["type"]
     match type:
         case "integer":
-            return NumericRepresentation()
+            rep = NumericRepresentation(ID=str(identifier), Version="1", Agency="eu.casd",  URN=f"uri:ddi:eu.casd:{str(identifier)}:1", NumberRange=var["length"])
         case "string":
-            return TextRepresentation()
-        case "IR_AMA_V":
-            return CodeRepresentation(CodeListReference="IR_AMA_V_URN_TODO")
+            rep = TextRepresentation(ID=str(identifier), Version="1", Agency="eu.casd",  URN=f"uri:ddi:eu.casd:{str(identifier)}:1", MaxLength=var["length"])
+        case "date":
+            rep = DateTimeRepresentation(ID=str(identifier), Version="1", Agency="eu.casd",  URN=f"uri:ddi:eu.casd:{str(identifier)}:1", DateFieldFormat=var["format"], Range=var["length"])
         case _:
-            return TodoRepresentation()
+            pass
+    # if var["nomenclature"] != "-":
+    #    rep = CodeRepresentation(ID=str(identifier), Version="1", Agency="eu.casd", CodeListReference="IR_AMA_V_URN_TODO", URN=f"uri:ddi:eu.casd:{str(identifier)}:1")
+    
+    return rep
 
 
-def pseudo_ddi(data):
+
+def main(data):
     in_vars = data["fields"]
-    out_vars = []
+    out_vars, out_reps, out_dates = [], [], []
     for v in in_vars:
-        type = v["nomenclature"] if v["nomenclature"] != "-" else v["type"]
-        rep = infer_representation(type)
-        identifier = uuid.uuid4()
+        rep = get_representation(v)
+        identifier, id_date, id_rep = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+        validityDates = AccessRestrictionDate(ID=id_date, Version="1", Agency="eu.casd", URN=f"uri:ddi:eu.casd:{id_date}:1", StartDate=v["dateCreated"], EndDate=v["dateDeleted"])
+        representation = VariableRepresentation(ID=id_rep, Version="1", Agency="eu.casd", URN=f"uri:ddi:eu.casd:{id_rep}:1", Representation=rep)
+
         var = Variable(
             ID=str(identifier),
             Version="1",
@@ -77,26 +111,40 @@ def pseudo_ddi(data):
             URN=f"uri:ddi:eu.casd:{str(identifier)}:1",
             VariableName=v["name"],
             Description=v["description"],
-            VariableRepresentation=VariableRepresentation(Representation=rep),
+            VariableRepresentation=representation,
+            ValidityDates=validityDates
         )
         out_vars.append(var)
-    return out_vars
+        out_reps.append(representation)
+        out_dates.append(validityDates)
+
+    return out_vars, out_reps, out_dates
 
 # ---- Run
 
 with open("./schemas/ER_PRS_F.json") as f:
     data = json.load(f)
-    vars = pseudo_ddi(data)
+    vars, reps, dates = main(data)
     context = {
         "ddi": "http://rdf-vocabulary.ddialliance.org/lifecycle"
     }
 
     res_vars = []
-    for thing in vars[0:10]:
+    for thing in vars:
         var_obj = {"ddi:Variable": thing.to_ld()}
         res_vars.append(var_obj)
 
-    doc = {"ddi:variables": res_vars}
+    res_reps = []
+    for thing in reps:
+        rep_obj = {"ddi:Representation": thing.Representation.to_ld()}
+        res_reps.append(rep_obj)
+
+    res_dates = []
+    for thing in dates:
+        date_obj = {"ddi:AccessRestrictionDate": thing.to_ld()}
+        res_dates.append(date_obj)
+
+    doc = {"ddi:variables": res_vars, "ddi:representations": res_reps, "ddi:dates": res_dates}
     res = jsonld.compact(doc, context)
-    with open("prs.json", "w") as out:
+    with open("json/prs.json", "w") as out:
         json.dump(res, out, indent=2)
