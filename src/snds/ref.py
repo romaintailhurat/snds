@@ -3,10 +3,13 @@ import dataclasses
 from pyld import jsonld
 import pprint
 import uuid
-
-# pydantic -> json pseudo ddi
+import pathlib
+import glob
+import os
 
 # ---- Model
+
+
 @dataclasses.dataclass
 class Base():
     ID: str
@@ -68,11 +71,14 @@ class Variable(Base):
     Description: str
     VariableRepresentation: VariableRepresentation
     ValidityDates: AccessRestrictionDate
+    belongsTo: str
 
     def to_ld(self):
-        return {"ddi:VariableName": self.VariableName, "ddi:URN": self.URN}
-
-# ---- Fns
+        return {"ddi:VariableName": self.VariableName, 
+                "ddi:URN": self.URN, 
+                "ddi:VariableRepresentation": self.VariableRepresentation.URN, 
+                "ddi:ValidityDates": self.ValidityDates.URN,
+                "ddi:belongsTo": self.belongsTo}
 
 
 def get_representation(var):
@@ -86,6 +92,12 @@ def get_representation(var):
             rep = TextRepresentation(ID=str(identifier), Version="1", Agency="eu.casd",  URN=f"uri:ddi:eu.casd:{str(identifier)}:1", MaxLength=var["length"])
         case "date":
             rep = DateTimeRepresentation(ID=str(identifier), Version="1", Agency="eu.casd",  URN=f"uri:ddi:eu.casd:{str(identifier)}:1", DateFieldFormat=var["format"], Range=var["length"])
+        case "number":
+            rep = NumericRepresentation(ID=str(identifier), Version="1", Agency="eu.casd",  URN=f"uri:ddi:eu.casd:{str(identifier)}:1", NumberRange=var["length"])
+        case "year":
+            rep = DateTimeRepresentation(ID=str(identifier), Version="1", Agency="eu.casd",  URN=f"uri:ddi:eu.casd:{str(identifier)}:1", DateFieldFormat=var["format"], Range=var["length"])
+        case "yearmonth":
+            rep = DateTimeRepresentation(ID=str(identifier), Version="1", Agency="eu.casd",  URN=f"uri:ddi:eu.casd:{str(identifier)}:1", DateFieldFormat=var["format"], Range=var["length"])
         case _:
             pass
     # if var["nomenclature"] != "-":
@@ -95,7 +107,7 @@ def get_representation(var):
 
 
 
-def main(data):
+def generate_variables(data, table_name):
     in_vars = data["fields"]
     out_vars, out_reps, out_dates = [], [], []
     for v in in_vars:
@@ -108,7 +120,8 @@ def main(data):
             ID=str(identifier),
             Version="1",
             Agency="eu.casd",
-            URN=f"uri:ddi:eu.casd:{str(identifier)}:1",
+            URN="http://ddi-alliance/snds/" + table_name + "/" + v["name"],
+            belongsTo=table_name,
             VariableName=v["name"],
             Description=v["description"],
             VariableRepresentation=representation,
@@ -120,31 +133,50 @@ def main(data):
 
     return out_vars, out_reps, out_dates
 
-# ---- Run
+def get_alias_table_name(table_name):
+    match table_name:
+        case "ER_PHA_F":
+            return "DCIR_PHA"
+        case "ER_PRS_F":
+            return "DCIR_PRS"
+        case "ER_BIO_F":
+            return "DCIR_BIO"
+        case "ER_CAM_F":
+            return "DCIR_CAM"
+        case _:
+            return table_name
 
-with open("./schemas/ER_PRS_F.json") as f:
-    data = json.load(f)
-    vars, reps, dates = main(data)
-    context = {
-        "ddi": "http://rdf-vocabulary.ddialliance.org/lifecycle"
-    }
 
-    res_vars = []
-    for thing in vars:
-        var_obj = {"ddi:Variable": thing.to_ld()}
-        res_vars.append(var_obj)
+def treat_table(tableJson):
+    table_name = pathlib.PurePath(tableJson).stem
+    table_name = get_alias_table_name(table_name)
+    with open(tableJson) as f:
+        data = json.load(f)
+        vars, reps, dates = generate_variables(data, table_name)
+        context = {
+            "ddi": "http://rdf-vocabulary.ddialliance.org/lifecycle"
+        }
 
-    res_reps = []
-    for thing in reps:
-        rep_obj = {"ddi:Representation": thing.Representation.to_ld()}
-        res_reps.append(rep_obj)
+        res_vars = []
+        for thing in vars:
+            var_obj = {"ddi:Variable": thing.to_ld()}
+            res_vars.append(var_obj)
 
-    res_dates = []
-    for thing in dates:
-        date_obj = {"ddi:AccessRestrictionDate": thing.to_ld()}
-        res_dates.append(date_obj)
+        res_reps = []
+        for thing in reps:
+            rep_obj = {"ddi:Representation": thing.Representation.to_ld()}
+            res_reps.append(rep_obj)
 
-    doc = {"ddi:variables": res_vars, "ddi:representations": res_reps, "ddi:dates": res_dates}
-    res = jsonld.compact(doc, context)
-    with open("json/prs.json", "w") as out:
-        json.dump(res, out, indent=2)
+        res_dates = []
+        for thing in dates:
+            date_obj = {"ddi:AccessRestrictionDate": thing.to_ld()}
+            res_dates.append(date_obj)
+
+        doc = {"ddi:variables": res_vars, "ddi:representations": res_reps, "ddi:dates": res_dates}
+        res = jsonld.compact(doc, context)
+        with open("./json/" + table_name + ".json", "w") as out:
+            json.dump(res, out, indent=2)
+
+
+for file_path in (glob.glob("./schemas/*/*.json", recursive=True)):
+    treat_table(tableJson=file_path)
