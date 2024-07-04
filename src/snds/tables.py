@@ -164,8 +164,8 @@ def treat_table(tableJson):
 
         res_reps = []
         for thing in reps:
-            "ddi:Representation"
-            rep_obj = {: thing.Representation.to_ld()}
+            name = "ddi:"+type(thing.Representation).__name__
+            rep_obj = {name: thing.Representation.to_ld()}
             res_reps.append(rep_obj)
 
         res_dates = []
