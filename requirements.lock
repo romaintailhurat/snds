@@ -10,11 +10,28 @@
 #   universal: false
 
 -e file:.
+anyio==4.4.0
+    # via httpx
 cachetools==5.3.3
     # via pyld
+certifi==2024.7.4
+    # via httpcore
+    # via httpx
 frozendict==2.4.4
     # via pyld
+h11==0.14.0
+    # via httpcore
+httpcore==1.0.5
+    # via httpx
+httpx==0.27.0
+    # via snds
+idna==3.7
+    # via anyio
+    # via httpx
 lxml==5.2.2
     # via pyld
 pyld==2.0.4
     # via snds
+sniffio==1.3.1
+    # via anyio
+    # via httpx

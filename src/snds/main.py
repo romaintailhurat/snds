@@ -1,16 +1,12 @@
-from snds.model.base import Base
-from snds.model.variable import Variable
+import httpx
+import pprint
 
-import pyld
-import json
+#resp = httpx.get("https://gitlab.com/healthdatahub/applications-du-hdh/schema-snds/-/raw/master/schemas/DCIR/ER_ANO_F.json?ref_type=heads")
 
-base = Base(ID="123456789", Version="1", Agency="eu.casd", URN="truc")
+#print(resp.status_code)
 
-test_var = Variable(
-    ID="123456789", Version="1", Agency="eu.casd", URN="truc", VariableName="TEST_VAR"
-)
+resp_tree = httpx.get("https://gitlab.com/api/v4/projects/11935694/repository/tree?path=schemas")
 
-context = {"ddi": "http://rdf-vocabulary.ddialliance.org/lifecycle"}
+schemas_sub_dirs = [o["path"] for o in resp_tree.json()]
 
-result = pyld.jsonld.compact(test_var.to_ld(), context)
-print(json.dumps(result, indent=2))
+print(schemas_sub_dirs)
