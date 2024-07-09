@@ -1,1 +1,1 @@
-curl -sSf https://rye.astral.sh/get | bash
+sudo curl -sSf https://rye.astral.sh/get | bash
