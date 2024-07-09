@@ -14,7 +14,14 @@ cachetools==5.3.3
     # via pyld
 frozendict==2.4.4
     # via pyld
+iniconfig==2.0.0
+    # via pytest
 lxml==5.2.2
     # via pyld
+packaging==24.1
+    # via pytest
+pluggy==1.5.0
+    # via pytest
 pyld==2.0.4
     # via snds
+pytest==8.2.2

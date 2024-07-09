@@ -11,7 +11,7 @@ import os
 
 
 @dataclasses.dataclass
-class Base():
+class Base:
     ID: str
     Version: str
     Agency: str
@@ -53,7 +53,11 @@ class DateTimeRepresentation(Base):
     Range: int
 
     def to_ld(self):
-        return {"ddi:DateFieldFormat": self.DateFieldFormat, "ddi:Range": self.Range, "ddi:URN": self.URN}
+        return {
+            "ddi:DateFieldFormat": self.DateFieldFormat,
+            "ddi:Range": self.Range,
+            "ddi:URN": self.URN,
+        }
 
 
 @dataclasses.dataclass
@@ -62,7 +66,11 @@ class AccessRestrictionDate(Base):
     EndDate: int
 
     def to_ld(self):
-        return {"ddi:StartDate": self.StartDate, "ddi:EndDate": self.EndDate, "ddi:URN": self.URN}
+        return {
+            "ddi:StartDate": self.StartDate,
+            "ddi:EndDate": self.EndDate,
+            "ddi:URN": self.URN,
+        }
 
 
 @dataclasses.dataclass
@@ -74,11 +82,13 @@ class Variable(Base):
     belongsTo: str
 
     def to_ld(self):
-        return {"ddi:VariableName": self.VariableName, 
-                "ddi:URN": self.URN, 
-                "ddi:VariableRepresentation": self.VariableRepresentation.URN, 
-                "ddi:ValidityDates": self.ValidityDates.URN,
-                "ddi:belongsTo": self.belongsTo}
+        return {
+            "ddi:VariableName": self.VariableName,
+            "ddi:URN": self.URN,
+            "ddi:VariableRepresentation": self.VariableRepresentation.URN,
+            "ddi:ValidityDates": self.ValidityDates.URN,
+            "ddi:belongsTo": self.belongsTo,
+        }
 
 
 def get_representation(var):
@@ -87,24 +97,62 @@ def get_representation(var):
     type = var["type"]
     match type:
         case "integer":
-            rep = NumericRepresentation(ID=str(identifier), Version="1", Agency="eu.casd",  URN=f"uri:ddi:eu.casd:{str(identifier)}:1", NumberRange=var["length"])
+            rep = NumericRepresentation(
+                ID=str(identifier),
+                Version="1",
+                Agency="eu.casd",
+                URN=f"uri:ddi:eu.casd:{str(identifier)}:1",
+                NumberRange=var["length"],
+            )
         case "string":
-            rep = TextRepresentation(ID=str(identifier), Version="1", Agency="eu.casd",  URN=f"uri:ddi:eu.casd:{str(identifier)}:1", MaxLength=var["length"])
+            rep = TextRepresentation(
+                ID=str(identifier),
+                Version="1",
+                Agency="eu.casd",
+                URN=f"uri:ddi:eu.casd:{str(identifier)}:1",
+                MaxLength=var["length"],
+            )
         case "date":
-            rep = DateTimeRepresentation(ID=str(identifier), Version="1", Agency="eu.casd",  URN=f"uri:ddi:eu.casd:{str(identifier)}:1", DateFieldFormat=var["format"], Range=var["length"])
+            rep = DateTimeRepresentation(
+                ID=str(identifier),
+                Version="1",
+                Agency="eu.casd",
+                URN=f"uri:ddi:eu.casd:{str(identifier)}:1",
+                DateFieldFormat=var["format"],
+                Range=var["length"],
+            )
         case "number":
-            rep = NumericRepresentation(ID=str(identifier), Version="1", Agency="eu.casd",  URN=f"uri:ddi:eu.casd:{str(identifier)}:1", NumberRange=var["length"])
+            rep = NumericRepresentation(
+                ID=str(identifier),
+                Version="1",
+                Agency="eu.casd",
+                URN=f"uri:ddi:eu.casd:{str(identifier)}:1",
+                NumberRange=var["length"],
+            )
         case "year":
-            rep = DateTimeRepresentation(ID=str(identifier), Version="1", Agency="eu.casd",  URN=f"uri:ddi:eu.casd:{str(identifier)}:1", DateFieldFormat=var["format"], Range=var["length"])
+            rep = DateTimeRepresentation(
+                ID=str(identifier),
+                Version="1",
+                Agency="eu.casd",
+                URN=f"uri:ddi:eu.casd:{str(identifier)}:1",
+                DateFieldFormat=var["format"],
+                Range=var["length"],
+            )
         case "yearmonth":
-            rep = DateTimeRepresentation(ID=str(identifier), Version="1", Agency="eu.casd",  URN=f"uri:ddi:eu.casd:{str(identifier)}:1", DateFieldFormat=var["format"], Range=var["length"])
+            rep = DateTimeRepresentation(
+                ID=str(identifier),
+                Version="1",
+                Agency="eu.casd",
+                URN=f"uri:ddi:eu.casd:{str(identifier)}:1",
+                DateFieldFormat=var["format"],
+                Range=var["length"],
+            )
         case _:
             pass
     # if var["nomenclature"] != "-":
     #    rep = CodeRepresentation(ID=str(identifier), Version="1", Agency="eu.casd", CodeListReference="IR_AMA_V_URN_TODO", URN=f"uri:ddi:eu.casd:{str(identifier)}:1")
-    
-    return rep
 
+    return rep
 
 
 def generate_variables(data, table_name):
@@ -113,8 +161,21 @@ def generate_variables(data, table_name):
     for v in in_vars:
         rep = get_representation(v)
         identifier, id_date, id_rep = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
-        validityDates = AccessRestrictionDate(ID=id_date, Version="1", Agency="eu.casd", URN=f"uri:ddi:eu.casd:{id_date}:1", StartDate=v["dateCreated"], EndDate=v["dateDeleted"])
-        representation = VariableRepresentation(ID=id_rep, Version="1", Agency="eu.casd", URN=f"uri:ddi:eu.casd:{id_rep}:1", Representation=rep)
+        validityDates = AccessRestrictionDate(
+            ID=id_date,
+            Version="1",
+            Agency="eu.casd",
+            URN=f"uri:ddi:eu.casd:{id_date}:1",
+            StartDate=v["dateCreated"],
+            EndDate=v["dateDeleted"],
+        )
+        representation = VariableRepresentation(
+            ID=id_rep,
+            Version="1",
+            Agency="eu.casd",
+            URN=f"uri:ddi:eu.casd:{id_rep}:1",
+            Representation=rep,
+        )
 
         var = Variable(
             ID=str(identifier),
@@ -125,13 +186,14 @@ def generate_variables(data, table_name):
             VariableName=v["name"],
             Description=v["description"],
             VariableRepresentation=representation,
-            ValidityDates=validityDates
+            ValidityDates=validityDates,
         )
         out_vars.append(var)
         out_reps.append(representation)
         out_dates.append(validityDates)
 
     return out_vars, out_reps, out_dates
+
 
 def get_alias_table_name(table_name):
     match table_name:
@@ -153,9 +215,7 @@ def treat_table(tableJson):
     with open(tableJson) as f:
         data = json.load(f)
         vars, reps, dates = generate_variables(data, table_name)
-        context = {
-            "ddi": "http://rdf-vocabulary.ddialliance.org/lifecycle"
-        }
+        context = {"ddi": "http://rdf-vocabulary.ddialliance.org/lifecycle"}
 
         res_vars = []
         for thing in vars:
@@ -172,11 +232,15 @@ def treat_table(tableJson):
             date_obj = {"ddi:AccessRestrictionDate": thing.to_ld()}
             res_dates.append(date_obj)
 
-        doc = {"ddi:variables": res_vars, "ddi:representations": res_reps, "ddi:dates": res_dates}
+        doc = {
+            "ddi:variables": res_vars,
+            "ddi:representations": res_reps,
+            "ddi:dates": res_dates,
+        }
         res = jsonld.compact(doc, context)
         with open("./json/" + table_name + ".json", "w") as out:
             json.dump(res, out, indent=2)
 
 
-for file_path in (glob.glob("./schemas/*/*.json", recursive=True)):
+for file_path in glob.glob("./schemas/*/*.json", recursive=True):
     treat_table(tableJson=file_path)
