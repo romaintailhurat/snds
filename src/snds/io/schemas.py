@@ -1,5 +1,4 @@
 import httpx
-import pprint
 import pathlib
 import os
 import datetime
@@ -10,12 +9,15 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 GITLAB_BASE_REPO_URL = "https://gitlab.com/api/v4/projects/11935694/repository/"
-GITLAB_BASE_REPO_FILES_URL = "https://gitlab.com/healthdatahub/applications-du-hdh/schema-snds/-/raw/master/"
+GITLAB_BASE_REPO_FILES_URL = (
+    "https://gitlab.com/healthdatahub/applications-du-hdh/schema-snds/-/raw/master/"
+)
 
 PATH_TO_CACHE_FILE = pathlib.Path.cwd() / "temp" / "schemas" / "download.cache"
 PATH_TO_SCHEMAS_DIR = pathlib.Path.cwd() / "temp" / "schemas"
 
 CACHE_DURATION_IN_DAYS = 7
+
 
 def cache_is_over(cache_file_path: pathlib.Path) -> bool:
     """Check if the cache file is older than a certain amount of time"""
@@ -55,8 +57,10 @@ def clean_schemas_dir(path_to_schemas_dir: pathlib.Path):
     for file in path_to_schemas_dir.iterdir():
         os.remove(file)  # we should only have files here
 
+
 def get_last_part_of_url(url):
     return url.split("/")[-1]
+
 
 def download_schemas(urls: list[str], path_to_write_to: pathlib.Path):
     for url in urls:
@@ -71,10 +75,11 @@ def download_schemas(urls: list[str], path_to_write_to: pathlib.Path):
                 json.dump(data, data_file)
 
 
-
 def get_schemas_files():
-    """Download SNDS schema files if we don't have them already or if the cache is stale."""
-    # TODO destroy cache if download is ko; or create cache file after all downloads :)
+    """
+    Download SNDS schema files if we don't have them already or if the cache is stale.
+    Storage location for files is decided by the `PATH_TO_SCHEMAS_DIR` constant.
+    """
     logger.info("Getting SNDS schema files.")
     schemas_dir_exists = PATH_TO_SCHEMAS_DIR.exists()
     schema_cache_file_exists = PATH_TO_CACHE_FILE.exists()
@@ -95,7 +100,9 @@ def get_schemas_files():
             download_schemas(get_schemas_urls(), PATH_TO_SCHEMAS_DIR)
             create_cache_file(PATH_TO_CACHE_FILE)
     else:
-        logger.info("Schemas dir and cache don't exist, creating them and downloading files.")
+        logger.info(
+            "Schemas dir and cache don't exist, creating them and downloading files."
+        )
         os.makedirs(PATH_TO_SCHEMAS_DIR)  # try catch?
         download_schemas(get_schemas_urls(), PATH_TO_SCHEMAS_DIR)
         create_cache_file(PATH_TO_CACHE_FILE)
