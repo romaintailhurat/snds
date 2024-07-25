@@ -1,4 +1,3 @@
-from snds.io.schemas import get_schemas_list
+from snds.io.schemas import get_schemas_files, get_schemas_urls
 
-schemas_list = get_schemas_list()
-print(schemas_list[0:10])
+get_schemas_files()
