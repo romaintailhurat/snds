@@ -63,6 +63,7 @@ def get_last_part_of_url(url):
 
 
 def download_schemas(urls: list[str], path_to_write_to: pathlib.Path):
+    schemas_paths = []
     for url in urls:
         logger.debug(f"Downloading schema file at {url}")
         resp = httpx.get(url)
@@ -73,6 +74,8 @@ def download_schemas(urls: list[str], path_to_write_to: pathlib.Path):
             logger.debug(f"Writing data to {file_path}")
             with open(PATH_TO_SCHEMAS_DIR / name, "w") as data_file:
                 json.dump(data, data_file)
+                schemas_paths.append(PATH_TO_SCHEMAS_DIR / name)
+    return schemas_paths
 
 
 def get_schemas_files():

@@ -1,16 +1,18 @@
-import dataclasses
+DDI_NAMESPACE = "http://rdf-vocabulary.ddialliance.org/lifecycle#"
 
-
-@dataclasses.dataclass
 class Base:
+    """This implements the Versionable trait of DDI L elements."""
+
     ID: str
     Version: str
     Agency: str
     URN: str | None
 
-    # TODO use a constructor to have a proper URN from the start ?
-    def get_urn(self) -> str:
-        if self.URN is None:
-            return f"urn:ddi:{self.Agency}:{self.Version}:{self.ID}"
-        else:
-            return self.URN
+    def __init__(self, ID, Version, Agency) -> None:
+        self.ID = ID
+        self.Version = Version
+        self.Agency = Agency
+        self.URN = f"urn:ddi:{self.Agency}:{self.Version}:{self.ID}"
+
+    def to_ld(self):
+        raise NotImplementedError("Can't be directly serialized;")
