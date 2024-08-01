@@ -1,4 +1,7 @@
-DDI_NAMESPACE = "http://rdf-vocabulary.ddialliance.org/lifecycle#"
+from rdflib import Namespace
+
+DDI = Namespace("http://rdf-vocabulary.ddialliance.org/lifecycle#")
+
 
 class Base:
     """This implements the Versionable trait of DDI L elements."""

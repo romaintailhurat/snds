@@ -1,11 +1,9 @@
 import json
 import dataclasses
 from pyld import jsonld
-import pprint
 import uuid
 import pathlib
 import glob
-import os
 
 # ---- Model
 

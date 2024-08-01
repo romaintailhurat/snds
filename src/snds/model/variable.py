@@ -1,28 +1,21 @@
 import dataclasses
-from snds.model.base import Base, DDI_NAMESPACE
-from rdflib import Graph, URIRef,RDF
+
+from rdflib.term import Literal
+from snds.model.base import Base, DDI
+from rdflib import Graph, URIRef, RDF
 
 
 @dataclasses.dataclass
 class Variable(Base):
     VariableName: str
 
-    def __init__(self, ID, Version, Agency) -> None:
+    def __init__(self, ID, Version, Agency, VariableName) -> None:
         super().__init__(ID, Version, Agency)
+        self.VariableName = VariableName
 
-    def to_ld(self):
-        compound_id = self.VariableName + self.ID
-        return {
-            "@id": f"http://ddi-alliance/snds/{compound_id}/",
-            "ddi:id": self.ID,
-            "ddi:agency": self.Agency,
-            "ddi:version": self.Version,
-            "ddi:urn": self.URN,
-        }
-
-    def to_rdf(self):
+    def to_rdf(self) -> Graph:
         g = Graph()
         var = URIRef(f"http://snds.org/{self.ID}")
-        variable_uri = URIRef(f"{DDI_NAMESPACE}Variable")
-        g.add((var, RDF.type, variable_uri))
+        g.add((var, RDF.type, DDI.Variable))
+        g.add((var, DDI.VariableName, Literal(self.VariableName)))
         return g
