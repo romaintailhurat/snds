@@ -5,8 +5,8 @@ This is a refined code base of the SNDS metadata documentation hackathon (for ba
 ## Proposed solutions
 
 - [ ] Get SNDS existing schema
-    - [ ] request via HTTP
-    - [ ] cache (1 day or 1 week? More?)
+    - [x] request via HTTP
+    - [x] cache (1 day or 1 week? More?)
 - [ ] Produce the in-memory DDI model
 - [ ] Serialize the model
     - [ ] JSON-LD
