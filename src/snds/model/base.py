@@ -17,5 +17,5 @@ class Base:
         self.Agency = Agency
         self.URN = f"urn:ddi:{self.Agency}:{self.Version}:{self.ID}"
 
-    def to_ld(self):
-        raise NotImplementedError("Can't be directly serialized;")
+    def to_rdf(self):
+        raise NotImplementedError(f"Can't directly produce a graph from {self.__class__.__qualname__}")
