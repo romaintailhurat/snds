@@ -32,3 +32,6 @@ packages = ["src/snds"]
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
+
+[tool.rye.scripts]
+main = "python src/snds/main.py"

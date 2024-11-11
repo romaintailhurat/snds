@@ -18,4 +18,6 @@ class Base:
         self.URN = f"urn:ddi:{self.Agency}:{self.Version}:{self.ID}"
 
     def to_rdf(self):
-        raise NotImplementedError(f"Can't directly produce a graph from {self.__class__.__qualname__}")
+        raise NotImplementedError(
+            f"Can't directly produce a graph from {self.__class__.__qualname__}"
+        )

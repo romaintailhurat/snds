@@ -1,7 +1,7 @@
 import pathlib
 import json
 import uuid
-from typing import Any
+from typing import Any, cast
 from snds.model.variable import Variable
 from rdflib import Graph
 
@@ -19,19 +19,34 @@ def snds_to_ddi(table: Any):
 
     return table_graph
 
+
 class IllegalArgumentError(ValueError):
     """Raised when a bad argument is provided."""
+
     pass
+
+
+def transform_one(source: pathlib.Path):
+    with open(source, "r") as source_file:
+        table = json.load(source_file)
+        result_graph = snds_to_ddi(table)
+        return result_graph
+
 
 def transform(source: pathlib.Path | list[pathlib.Path]):
     """Transform from a file path or a list of file paths."""
-
-    if type(source) is list and issubclass(type(source[0]),  pathlib.Path) :
+    graph = Graph()
+    if type(source) is list and issubclass(type(source[0]), pathlib.Path):
         print("a list of Path")
+        for file_path in source:
+            subgraph = transform_one(file_path)
+            graph = graph + subgraph
     elif issubclass(type(source), pathlib.Path):
         print("a Path")
+        graph = transform_one(cast(pathlib.Path, source))
     else:
         raise IllegalArgumentError
+    return graph
 
     # if issubclass(type(source), pathlib.Path):
     #     with open(source, "r") as source_file:
