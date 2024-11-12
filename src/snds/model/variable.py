@@ -1,5 +1,3 @@
-import dataclasses
-
 from rdflib.term import Literal
 from snds.model.base import Base, DDI
 from rdflib import Graph, URIRef, RDF

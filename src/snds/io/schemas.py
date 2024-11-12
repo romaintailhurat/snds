@@ -62,7 +62,17 @@ def get_last_part_of_url(url):
     return url.split("/")[-1]
 
 
-def download_schemas(urls: list[str], path_to_write_to: pathlib.Path):
+def list_schemas_in_dir(path_to_schemas_dir: pathlib.Path):
+    list_of_file_path = []
+    for file_path in path_to_schemas_dir.iterdir():
+        if file_path != PATH_TO_CACHE_FILE:
+            list_of_file_path.append(file_path)
+    return list_of_file_path
+
+
+def download_schemas(
+    urls: list[str], path_to_write_to: pathlib.Path
+) -> list[pathlib.Path]:
     schemas_paths = []
     for url in urls:
         logger.debug(f"Downloading schema file at {url}")
@@ -78,7 +88,7 @@ def download_schemas(urls: list[str], path_to_write_to: pathlib.Path):
     return schemas_paths
 
 
-def get_schemas_files():
+def get_schemas_files() -> list[pathlib.Path]:
     """
     Download SNDS schema files if we don't have them already or if the cache is stale.
     Storage location for files is decided by the `PATH_TO_SCHEMAS_DIR` constant.
@@ -86,26 +96,32 @@ def get_schemas_files():
     logger.info("Getting SNDS schema files.")
     schemas_dir_exists = PATH_TO_SCHEMAS_DIR.exists()
     schema_cache_file_exists = PATH_TO_CACHE_FILE.exists()
+    list_of_file_paths = []
     if schemas_dir_exists:
         if schema_cache_file_exists:
-            with open(PATH_TO_CACHE_FILE) as cache_file:
-                logger.debug("Cache file exists.")
-                if cache_is_over(PATH_TO_CACHE_FILE):
-                    logger.info("Cache is over, downloading schemas.")
-                    clean_schemas_dir(PATH_TO_SCHEMAS_DIR)
-                    download_schemas(get_schemas_urls(), PATH_TO_SCHEMAS_DIR)
-                    create_cache_file(PATH_TO_CACHE_FILE)
-                else:
-                    logger.info("Cache is still valid, no download.")
+            logger.debug("Cache file exists.")
+            if cache_is_over(PATH_TO_CACHE_FILE):
+                logger.info("Cache is over, downloading schemas.")
+                clean_schemas_dir(PATH_TO_SCHEMAS_DIR)
+                list_of_file_paths = download_schemas(
+                    get_schemas_urls(), PATH_TO_SCHEMAS_DIR
+                    )
+                create_cache_file(PATH_TO_CACHE_FILE)
+            else:
+                logger.info("Cache is still valid, no download.")
+                list_of_file_paths = list_schemas_in_dir(PATH_TO_SCHEMAS_DIR)
         else:
             logger.info("There is no cache file, downloading.")
             clean_schemas_dir(PATH_TO_SCHEMAS_DIR)
-            download_schemas(get_schemas_urls(), PATH_TO_SCHEMAS_DIR)
+            list_of_file_paths = download_schemas(
+                get_schemas_urls(), PATH_TO_SCHEMAS_DIR
+            )
             create_cache_file(PATH_TO_CACHE_FILE)
     else:
         logger.info(
             "Schemas dir and cache don't exist, creating them and downloading files."
         )
         os.makedirs(PATH_TO_SCHEMAS_DIR)  # try catch?
-        download_schemas(get_schemas_urls(), PATH_TO_SCHEMAS_DIR)
+        list_of_file_paths = download_schemas(get_schemas_urls(), PATH_TO_SCHEMAS_DIR)
         create_cache_file(PATH_TO_CACHE_FILE)
+    return list_of_file_paths
