@@ -3,20 +3,20 @@ import json
 import uuid
 import logging
 from typing import Any, cast
+from snds.model.snds import Schema
 from snds.model.variable import Variable
 from rdflib import Graph
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-def snds_to_ddi(table: Any):
+def snds_to_ddi(table: Schema):
     """Transform a SNDS table schema to a DDI-L RDF object."""
     # TODO type the table parameter, it's probably a dict
     fields = table["fields"]
     table_graph = Graph()
 
     for field in fields:
-        source_var = field
         var = Variable(str(uuid.uuid4()), "1", "agency", field["name"])
         table_graph = table_graph + var.to_rdf()
 
