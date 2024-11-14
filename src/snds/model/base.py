@@ -12,6 +12,7 @@ class Base:
     URN: str | None
 
     def __init__(self, ID, Version, Agency) -> None:
+        # TODO provide default when None for every parameter.
         self.ID = ID
         self.Version = Version
         self.Agency = Agency

@@ -16,8 +16,9 @@ def snds_to_ddi(table: Schema):
     fields = table["fields"]
     table_graph = Graph()
 
-    for field in fields:
-        var = Variable(str(uuid.uuid4()), "1", "agency", field["name"])
+    for snds_var in fields:
+        var = Variable(str(uuid.uuid4()), "1", "agency", snds_var["name"])
+        var.add_representation_from_snds_variable(snds_var)
         table_graph = table_graph + var.to_rdf()
 
     return table_graph

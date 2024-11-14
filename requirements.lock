@@ -7,8 +7,11 @@
 #   all-features: false
 #   with-sources: false
 #   generate-hashes: false
+#   universal: false
 
 -e file:.
+annotated-types==0.7.0
+    # via snds
 anyio==4.4.0
     # via httpx
 cachetools==5.3.3
