@@ -105,7 +105,7 @@ def get_schemas_files() -> list[pathlib.Path]:
                 clean_schemas_dir(PATH_TO_SCHEMAS_DIR)
                 list_of_file_paths = download_schemas(
                     get_schemas_urls(), PATH_TO_SCHEMAS_DIR
-                    )
+                )
                 create_cache_file(PATH_TO_CACHE_FILE)
             else:
                 logger.info("Cache is still valid, no download.")

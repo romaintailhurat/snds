@@ -3,13 +3,14 @@ import uuid
 from annotated_types import Ge
 from rdflib.term import Literal
 from snds.model.base import Base, DDI
-from rdflib import Graph, URIRef, RDF, graph
+from rdflib import Graph, URIRef, RDF
 
 from snds.model.snds import SNDSVariable
 
 PositiveInt = Annotated[int, Ge(0)]
 
-class Representation():
+
+class Representation:
     """Super class for various representations.
     Not used directly but provides a method to return the correct implementation."""
 
@@ -25,8 +26,10 @@ class Representation():
     def to_rdf(self) -> Graph:
         return Graph()
 
+
 class TextRepresentationBase(Representation):
     """Text representation, see https://ddialliance.github.io/ddimodel-web/DDI-L-3.3/composite-types/TextRepresentationBaseType/"""
+
     MaxLength: PositiveInt
     MinLength: PositiveInt
 
@@ -36,8 +39,9 @@ class TextRepresentationBase(Representation):
         g.add((trep, RDF.type, DDI.TextRepresentation))
         return g
 
-class VariableRepresentationType():
-    ValueRepresentation : Representation
+
+class VariableRepresentationType:
+    ValueRepresentation: Representation
     _id: uuid.UUID
 
     def __init__(self, ValueRepresentation, id: uuid.UUID):
@@ -51,6 +55,7 @@ class VariableRepresentationType():
         g += self.ValueRepresentation.to_rdf()
         return g
 
+
 class Variable(Base):
     VariableName: str
     VariableRepresentation: VariableRepresentationType
@@ -62,7 +67,9 @@ class Variable(Base):
     # static def from_snds_variable ???
 
     def add_representation_from_snds_variable(self, svar: SNDSVariable):
-        self.VariableRepresentation = VariableRepresentationType(Representation.from_snds_variable(svar), uuid.uuid4())
+        self.VariableRepresentation = VariableRepresentationType(
+            Representation.from_snds_variable(svar), uuid.uuid4()
+        )
 
     def to_rdf(self) -> Graph:
         g = Graph()

@@ -2,13 +2,14 @@ import pathlib
 import json
 import uuid
 import logging
-from typing import Any, cast
+from typing import cast
 from snds.model.snds import Schema
 from snds.model.variable import Variable
 from rdflib import Graph
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
+
 
 def snds_to_ddi(table: Schema):
     """Transform a SNDS table schema to a DDI-L RDF object."""
@@ -26,6 +27,7 @@ def snds_to_ddi(table: Schema):
 
 class IllegalArgumentError(ValueError):
     """Raised when a bad argument is provided."""
+
     pass
 
 
