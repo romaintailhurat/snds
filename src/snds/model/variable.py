@@ -14,6 +14,9 @@ class Representation:
     """Super class for various representations.
     Not used directly but provides a method to return the correct implementation."""
 
+    _id: uuid.UUID
+    _ref: URIRef
+
     @staticmethod
     def from_snds_variable(variable: SNDSVariable):
         """Return the right `Representation`subclass from a SNDS variable type."""
@@ -22,6 +25,14 @@ class Representation:
                 return TextRepresentationBase()
             case _:
                 return TextRepresentationBase()
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def uriref(self):
+        return self._ref
 
     def to_rdf(self) -> Graph:
         return Graph()
@@ -33,9 +44,13 @@ class TextRepresentationBase(Representation):
     MaxLength: PositiveInt
     MinLength: PositiveInt
 
+    def __init__(self) -> None:
+        self._id = uuid.uuid4()
+        self._ref = URIRef(f"http://snds.org/{self._id}")
+
     def to_rdf(self):
         g = Graph()
-        trep = URIRef(f"http://snds.org/{uuid.uuid4()}")
+        trep = URIRef(f"http://snds.org/{self._id}")
         g.add((trep, RDF.type, DDI.TextRepresentation))
         return g
 
@@ -44,14 +59,15 @@ class VariableRepresentationType:
     ValueRepresentation: Representation
     _id: uuid.UUID
 
-    def __init__(self, ValueRepresentation, id: uuid.UUID):
+    def __init__(self, ValueRepresentation):
         self.ValueRepresentation = ValueRepresentation
-        self._id = id
+        self._id = uuid.uuid4()
 
     def to_rdf(self):
         g = Graph()
         valuerep = URIRef(f"http://snds.org/{self._id}")
         g.add((valuerep, RDF.type, DDI.VariableRepresentation))
+        g.add((valuerep, DDI.ValueRepresentation, self.ValueRepresentation.uriref))
         g += self.ValueRepresentation.to_rdf()
         return g
 
@@ -68,7 +84,7 @@ class Variable(Base):
 
     def add_representation_from_snds_variable(self, svar: SNDSVariable):
         self.VariableRepresentation = VariableRepresentationType(
-            Representation.from_snds_variable(svar), uuid.uuid4()
+            Representation.from_snds_variable(svar)
         )
 
     def to_rdf(self) -> Graph:
