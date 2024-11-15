@@ -2,7 +2,7 @@ from typing import Annotated
 import uuid
 from annotated_types import Ge
 from rdflib.term import Literal
-from snds.model.base import Base, DDI
+from snds.model.base import URIIdentifiable, Versionable, DDI, SNDS
 from rdflib import Graph, URIRef, RDF
 
 from snds.model.snds import SNDSVariable
@@ -10,12 +10,9 @@ from snds.model.snds import SNDSVariable
 PositiveInt = Annotated[int, Ge(0)]
 
 
-class Representation:
+class Representation(URIIdentifiable):
     """Super class for various representations.
     Not used directly but provides a method to return the correct implementation."""
-
-    _id: uuid.UUID
-    _ref: URIRef
 
     @staticmethod
     def from_snds_variable(variable: SNDSVariable):
@@ -26,32 +23,23 @@ class Representation:
             case _:
                 return TextRepresentationBase()
 
-    @property
-    def id(self):
-        return self._id
-
-    @property
-    def uriref(self):
-        return self._ref
-
     def to_rdf(self) -> Graph:
         return Graph()
 
 
-class TextRepresentationBase(Representation):
+class TextRepresentationBase(Representation, URIIdentifiable):
     """Text representation, see https://ddialliance.github.io/ddimodel-web/DDI-L-3.3/composite-types/TextRepresentationBaseType/"""
 
     MaxLength: PositiveInt
     MinLength: PositiveInt
 
     def __init__(self) -> None:
-        self._id = uuid.uuid4()
-        self._ref = URIRef(f"http://snds.org/{self._id}")
+        super().__init__()
+        self._uri = SNDS[f"TextRepresentation/{self._id}"]
 
     def to_rdf(self):
         g = Graph()
-        trep = URIRef(f"http://snds.org/{self._id}")
-        g.add((trep, RDF.type, DDI.TextRepresentation))
+        g.add((self._uri, RDF.type, DDI.TextRepresentation))
         return g
 
 
@@ -67,12 +55,12 @@ class VariableRepresentationType:
         g = Graph()
         valuerep = URIRef(f"http://snds.org/{self._id}")
         g.add((valuerep, RDF.type, DDI.VariableRepresentation))
-        g.add((valuerep, DDI.ValueRepresentation, self.ValueRepresentation.uriref))
+        g.add((valuerep, DDI.ValueRepresentation, self.ValueRepresentation.uri))
         g += self.ValueRepresentation.to_rdf()
         return g
 
 
-class Variable(Base):
+class Variable(Versionable):
     VariableName: str
     VariableRepresentation: VariableRepresentationType
 
@@ -80,7 +68,7 @@ class Variable(Base):
         super().__init__(ID, Version, Agency)
         self.VariableName = VariableName
 
-    # static def from_snds_variable ???
+    # static def from_snds_variable -> new Variable instance ???
 
     def add_representation_from_snds_variable(self, svar: SNDSVariable):
         self.VariableRepresentation = VariableRepresentationType(

@@ -1,9 +1,25 @@
-from rdflib import Namespace
+from rdflib import Namespace, URIRef
+import uuid
 
 DDI = Namespace("http://rdf-vocabulary.ddialliance.org/lifecycle#")
+SNDS = Namespace("http://snds.org/")
 
+class URIIdentifiable():
+    _id: uuid.UUID
+    _uri: URIRef
 
-class Base:
+    def __init__(self) -> None:
+        self._id = uuid.uuid4()
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def uri(self):
+        return self._uri
+
+class Versionable:
     """This implements the Versionable trait of DDI L elements."""
 
     ID: str
